@@ -1,0 +1,274 @@
+---
+title: "Continuous by Continuous Interactions"
+author: "Joel S Steele, PhD"
+output: pdf_document
+---
+Adapted from: (http://stackoverflow.com/questions/18147595/plot-3d-plane-true-regression-surface)
+```{r setup, echo=FALSE}
+library(knitr)
+opts_chunk$set(comment='')
+library(lattice)
+```
+
+### Data
+
+These data are a subset of the __High school and beyond__ dataset used by numerous authors. For our purposes we will be grabbing a copy of these data from _UCLA_. These data are in __Stata__ format, so we tell __R__ to load up the __foreign__ package which can handle data of different formats.
+```{r}
+# load up the module that will allow us to read
+# stata data into R
+library(foreign)
+# notice that we pull this from online.
+ml <- read.dta("http://www.ats.ucla.edu/stat/data/hsbdemo.dta")
+```
+
+### Model with Interactions
+
+Here we start with a model in which __Reading__ scores (_read_) are predictred by __Math__ (_math_) and __Social Studies__ (_socst_) scores, and the __interaction__ between them. For this model we leave each predictor __uncentered__. This means that the estimates of the _Intercept_ as well as the influence of the predictors (i.e., _math_, _socst_, _math_ $\times$ _socst_) on the outcome (_read_) are conditional on where each predictor is __zero__.
+   
+The model we fit is
+$$read_i \sim math_i + socst_i + math_i \times socst_i + \epsilon_i$$   
+
+```{r}
+hsblm1 = lm(read ~ math + socst + math:socst, data=ml)
+# Have a look. Keep in mind that with the interaction included
+# all of the main effects are conditional, thus they are simple
+# effects and no longer "main" effects.
+summary( hsblm1 )
+
+### Plotting the interaction
+# Since our interaction is between two continuous variables
+# we can decide on which one to select different levels of in
+# order to plot the conditional relationship between the other
+# predictor and the outcome.
+# how big of a range?
+range(ml$math)
+# Plot the points
+with(ml, plot(read ~ math,col='blue'))
+# Make a small 2x1 vector that has values 1 sd above and below the
+# mean value of Social Studies. These will be our conditional values
+# for when we plot the relation between Math and Reading.
+sd1up1down = c(mean(ml$socst)-sd(ml$socst),
+               mean(ml$socst)+sd(ml$socst))
+# Here we will use the model fit to the data to predict using the 
+# one sd above and below values. These will be added to the plot of
+# the points that we created above.
+# add a line for the one sd below the mean
+lines(range(ml$math),
+      predict(hsblm1, 
+              data.frame(math=range(ml$math),socst=sd1up1down[1])
+              ),
+      lty='dashed',lwd=3)
+# add a line for the one sd above the mean
+lines(range(ml$math),
+      predict(hsblm1, 
+              data.frame(math=range(ml$math),socst=sd1up1down[2])
+              ),
+      lty='dotted',lwd=3)
+
+#### A range of values
+# Next we do the same thing for a range of possible values
+# for Social Studies. In this particular case we do that same as above
+# but instead of just 1 sd above and below, we iterate over a range from
+# 30 to 75 with an increase of 5 at each step
+# First we plot to set up the canvas, and add in the points
+with(ml, 
+     plot(read~math,main='Reading on Math for different levels of Socst',xlim=c(33,80)))
+# Next we add lines using our sequence for each value of Social Studies
+sapply(seq(30,75,5),
+       function(x){ 
+         lines(range(ml$math),
+               predict(hsblm1, 
+                       data.frame(math=range(ml$math),socst=c(x))),
+               lty=x)
+        }
+)
+# last, but not least, we add in the legend.
+legend('topright',title='socst',paste(rev(seq(30,75,5)),''),lty=rev(seq(30,75,5)),inset=.01)
+```
+### Selecting a center point
+ Next we investigate the results of centering our continuous variables on the estimates of the effects in our model.
+
+```{r}
+# There are more variables than we need so we subset
+hsb_small = ml[,c('id','read','math','socst')]
+```
+   
+   
+Here we use the _scale()_ function to center each variable
+ notice the argument '_scale=**F**_', this just subtracts the mean
+ without dividing by the standard deviation. So these are still
+ in the original metric, just the are mean deviation scores now.
+   
+```{r}
+hsb_small$math_c = scale(hsb_small$math, scale=F)
+hsb_small$socst_c = scale(hsb_small$socst, scale=F)
+# Here we refit the model, this time using the mean deviation scores
+```
+
+Next, we fit the model using the mean centered predictors.
+   
+```{r}
+hsblmz = lm(read ~ math_c*socst_c, hsb_small)
+summary(hsblmz)
+# That's a big difference!
+# This is reflected in the standard errors between the two models, let's
+# have a look
+cbind(summary(hsblm1)$coef[,1:2], # uncentered
+      summary(hsblmz)$coef[,1:2]) # centered
+# This is also reflected in the tolerance values, which remember are
+# equal to 1 over the variance inflation factor.
+# tolerance differences
+require(car)
+cbind('uncentered'=1/vif(hsblm1),
+      'centered'=1/vif(hsblmz))
+
+### Result of centering on the parameter estimates
+# Below we will center each variable in turn to see the
+# differences in the model estimates. 
+# Conditional slopes comparisons
+with(hsb_small,
+     cbind(
+       'non-intrxn'=c(coef(lm(read~math+socst)),'intrxn'=0),
+       'uncentered intrxn'=coef(lm(read~math*socst)),
+       'centered math'=coef(lm(read~math_c*socst)),
+       'centered socst'=coef(lm(read~math*socst_c)),
+       'all centered'=coef(lm(read~math_c*socst_c))))
+```
+   
+Notice that the interaction term did not change. This represents
+ the curvature of the response surface that results from fitting this
+ model. Notice also that the parameter estimates bounce around depending on
+ if the variables are centered or not. This equates to different slopes
+ for the variables based on where on the response surface we are focusing.
+
+### Visualizing the response surface.   
+
+Here I try to plot the regression surface using _rgl_.
+First, we will graph a response surface for a model with no interactions.
+    
+```{r}
+with(hsb_small, plot3d(math_c,socst_c,read, type="s", col='red',size=1))
+cfs = coef(lm(read ~ math_c + socst_c, data=hsb_small))
+a = cfs["math_c"]
+b = cfs["socst_c"]
+d = cfs["(Intercept)"]
+planes3d(a,b,-1,d,alpha=.6, front='lines')
+
+```
+
+### Graphing the interaction   
+
+ Next we move onto graphing the interaction between the
+ two continuous variables. This is done by creating 
+ two new functions: _myregfun()_ and _myregsuf()_. One to handle the prediction based 
+ on the model, the other to set-up of the surface.
+
+```{r}
+# Here is the function to predict. This is pretty specific
+# to our model.
+myregfun = function(x,y,reg=hsblmz){
+  # grab the coefficients from the regression model
+  # this defaults to the model in 'hsblmz', but you
+  # could pass in another one. So long at the same
+  # coefficients are in the model.
+  cfs = coef(reg) 
+  # create variables for each term
+  x1 = cfs["(Intercept)"] 
+  x2 = cfs["math_c"]
+  x3 = cfs["socst_c"]
+  x4 = cfs["math_c:socst_c"]
+  # arrange the coefficents and predict
+  x1 + x2*x + x3*y + x4*x*y
+}
+# Here is the function to render the surface
+myregsurf = function(f, n=10, ...){
+  # Get the range of the currently open graph
+  rng = rgl:::.getRanges()
+  # create some vectors of values to plot along
+  x = seq(rng$xlim[1], rng$xlim[2], length=n) # length
+  y = seq(rng$ylim[1], rng$ylim[2], length=n) # width
+  # compute the height based on the function "f"
+  # in this case we pass in the regression prediction function
+  # so this is taking the values we created above and using those
+  # as inputs to the regression function we created earlier.
+  z = outer(x,y,f)
+  # Here we color the resulting surface, this is optional
+  # and can be removed, but it helps.
+  # What is the range our our computed output?
+  zlim = range(z)
+  zlen = zlim[2] - zlim[1] + 1
+  colorlut = terrain.colors(zlen) # terrain colors
+  col = colorlut[ z-zlim[1]+1]
+  # Finally, we actually render the surface.
+  surface3d(x,y,z, color=col, ...)
+}
+```
+Now, with the above function defined we can call them to create our graph
+ using the data we plot the points in 3 dimensions.   
+Next, we call the surface rendering function, and pass it the regression
+ function we created.
+
+```{r rgl=TRUE}
+# plot the dots
+with(hsb_small, plot3d(math_c,socst_c,read, type="s", col='red',size=.75))
+# add the response surface
+myregsurf(myregfun,alpha=.90,back='lines',lwd=1.5)
+```
+   
+   This is great, but... we are only seeing the surface around the data that we 
+ actually have. This is not a bad thing, but it doesn't really illustrate what
+ the surface looks like out of this range.   
+ We may want to see what to expect if we estimated the effects when each predictor
+ is zero on the original scale. So, when someone has zero for both math and reading,
+ rather than the average of math and reading.   
+ In order to accomplish this, we will open up the range of the plot. First we find
+ out the range of the data.   
+ 
+```{r rgl=TRUE}
+rngs = apply(hsb_small, 2, range)
+# Then we decide how much to expand by
+exr = c(50,30) # lower by 50, upper by 30
+# now we plot the data points in 3 dimensions again, but now we use new plotting limits.
+with(hsb_small, 
+     plot3d(math_c,socst_c,read, # the points to plot
+            type="s", col='red',
+            size=.75, 
+            # new x, y, and z range
+                   # low - 50      , # high + 30  
+            xlim=c(rngs[1,5]-exr[1], rngs[2,5]+exr[2]),
+            ylim=c(rngs[1,6]-exr[1], rngs[2,6]+exr[2]),
+            zlim=c(rngs[1,2]-exr[1], rngs[2,2]+exr[2])
+            )
+)
+# call the function to render the surface again, but this time
+# for a much larger range.
+myregsurf(myregfun,alpha=.60,back='lines',lwd=1.5,n=100)
+```
+   
+Now we can see that the interaction results in a curved surface.
+ The reason the interaction doesn't change is because it represents
+ the curvature, which is constant along the surface. But, depending
+ on where you are on the surface, the tangent lines will have different
+ slopes. Thus the estimates of the other terms are conditional!
+   
+### Interpretation in applied terms   
+
+ What this, hopefully, shows is that, when the model contains an interaction,
+ the magnitude and direction of the relation between a continous predictor 
+ and the outcome depends on the level of the other  predictor in the model. 
+ So, it we can say that when someone scores a zero on both
+ Math and Social Studies, the relation of either of these values on reading
+ is not and different from zero (no relation at all). However, as the scores
+ in either measure increase, the relation with reading changes.
+ We see this in the difference between the estimates from the raw score model
+ versus the estimates from the model with centered variables. In the first case
+ the effects of Math and Social Studies were non significant because we were
+ focusing on the part of the curve where these values were zero on the raw 
+ scale. By centering the data, and making each predictor into a mean-deviation
+ score, we move the focus of the model to be within the middle of our cloud of
+ data. As a result the influence of each predictor on the outcome was worth noting.
+ The other major result was that the model could be estimated much more precisely,
+ which was reflected in the smaller standard errors between the two models.
+
+
+
