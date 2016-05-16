@@ -1,0 +1,526 @@
+\documentclass[jou]{apa6}
+\usepackage{pdflscape}
+\usepackage{amsmath}
+\usepackage{enumitem}
+
+\title{Regression Estimation and Nonlinear Transformations}
+\author{Joel S Steele}
+\affiliation{Portland State University}
+\shorttitle{nonlinear regression}
+%\abstract{}
+\begin{document}
+
+\maketitle
+
+\section{Regression through Calculus with Partial Derivatives}
+
+\subsection{Level-Level bivariate regression example}
+
+Within the regression framework, we are most interested in using a linear combination of parameters and variables to explain variance in our outcome of interest. The basic model takes the form of a line.
+$$ y = a x + b$$
+or a more common expression in regression,
+$$ y_i = b_0 + b_1 x_i + \epsilon_i$$
+Where $b_0$ and $b_1$ represent the intercept and slope respectively.
+
+\subsection{Parameter estimation}
+
+Below we will use the \textit{least squares} criteria to find the optimal estimates of both the intercept and slope. While we most often use computers to do this, it may be instructive to see a small example of exactly such a function is \textit{minimized} by hand.
+
+\subsection{Hand computation with Calculus}
+   
+\textbf{Example:}   
+Say that you are interested in whether or not a mother's level of education relates to her child's high school GPA.   
+
+\textbf{The data:} 
+
+\begin{itemize}
+
+  \item Mother's education: $X = [0, 1, 3, 4]$
+  \item HS GPA: $Y = [3.0, 3.2, 3.3, 3.7]$
+    \begin{enumerate}
+    \item $(0, 3.0)$
+    \item $(1, 3.2)$
+    \item $(3, 3.3)$
+    \item $(4, 3.7)$
+    \end{enumerate}
+\end{itemize}
+
+We know that the equation for a line is $y = ax + b$. If we only had two points we could solve for each parameter $a$ and $b$ exactly. However, above we have $4$ points. Thus we have more information (\emph{observations}) that we do unknowns (\emph{parameters}). Technically, this means our hypothesized system is over-identified and to get an exact solution would require more parameters. But in this case, let's say that we like our line, and what's more, we believe in it (remember, parsimony is preferred). So, in practice we need to introduce some criteria with which to judge our linear model relative to the data.
+Thus, we need to define the error term, we will use expected, $ax + b$, minus observed $y$, which makes the error equation, 
+$$\epsilon_i = a x_i + b - y_i.$$
+To minimize the sum of squared error we take this function and square it
+$$\sum_i \epsilon_i^2 = \sum_i (a x_i + b - y_i)^2$$
+Using our data this sum of squared errors can now be expressed as: 
+$$
+\begin{array}{rlr}
+SS_e &= [(0a + b - 3.0)^2 & \text{ values from point }1\\ 
+  & +(1a + b - 3.2)^2     & \text{ values from point }2\\ 
+	& +(3a + b - 3.3)^2     & \text{ values from point }3\\ 
+	& +(4a + b - 3.7)^2]    & \text{ values from point }4
+\end{array}
+$$
+Simplify and expand
+$$
+\begin{array}{rl}
+SS_e &= [(b - 3.0)(b - 3.0) + \\
+	&(a + b - 3.2)(a + b - 3.2) + \\
+	&(3a + b - 3.3)(3a + b - 3.3) + \\
+	&(4a + b - 3.7)(4a + b - 3.7) ] 
+\end{array}
+$$
+Multiply through and collect similar terms within each sub-expression
+$$
+\begin{array}{rl}
+SS_e &= [ (b^2 - 6b + 9) + \\
+	&(a^2 + 2ab - 6.4a  + b^2 - 6.4b + 10.24) + \\
+  &(9a^2 + 6ab - 19.8a + b^2 - 6.6b + 10.89) + \\
+	&(16a^2 + 8ab - 29.6a + b^2 - 7.4b + 13.69)] 
+\end{array}
+$$
+Combine all sub-expressions and collect common terms
+$$
+\begin{array}{rl}
+SS_e &= a^2 + 9a^2 + 16a^2\\ 
+	&+ b^2 + b^2 + b^2 + b^2 \\
+	&- 6.4a - 19.8a - 29.6a \\
+	&- 6b - 6.4b - 6.6b - 7.4b \\
+	&+ 2ab + 6ab + 8ab \\
+	&+ 9 + 10.24 + 10.89 + 13.69 
+\end{array}
+$$
+Simplify common terms
+$$
+\begin{array}{rl}
+SS_e &=	26a^2\\
+	&+ 4b^2 \\
+	&- 55.8a \\
+	&- 26.4b \\
+	&+ 16ab \\
+	&+ 43.82 
+\end{array}
+$$
+This is the equation for the sum of squared errors for our four observed points
+$$
+SS_e = 26a^2 + 4b^2 - 55.8a - 26.4b + 16ab + 43.82 
+$$
+Take the partial derivative of this equation with respect to each parameter. For example, taking the partial derivative of the function $SS_e$ with respect to $a$ is presented below. It is important to note that since we are differentiating the equation based on the parameter $a$ we only need to consider those terms that have the term $a$ in them. We will be using the power rule, which states $\frac{d}{dx} = (x^n) = n \cdot x^{n-1}$.
+$$
+\begin{array}{rlll}
+ SS_e \mbox{ w.r.t. } a
+&= 26a^2 
+&- 55.8a 
+&+ 16ab \\
+\multicolumn{4}{c}{}\\
+\frac{\partial SS_e}{\partial a} 
+&= 26    \left(2 \cdot a^{1} \right) 
+&-55.8   \left(1 \cdot a^{0} \right) 
+&+16 b   \left(1 \cdot a^{0} \right)\\
+\multicolumn{4}{c}{}\\
+\frac{\partial SS_e}{\partial a} 
+&= 26   (2 \cdot a  ) 
+&-55.8  (1 \cdot 1  )
+&+16 b  (1 \cdot 1  ) \\
+\multicolumn{4}{c}{}\\
+\multicolumn{4}{c}{\frac{\partial SS_e}{\partial a} = 52a - 55.8 + 16b}
+\end{array}
+$$
+We rearrange it to look like our equation for a line and set this equal to zero, this gives us the minimum point for the equation, or where the change stops.   
+$$
+\begin{array}{rl}
+\frac{\partial SSe}{\partial a} &= 52 a + 16 b - 55.8\\ 
+           0 &= 52 a + 16 b - 55.8 
+\end{array}
+$$
+Repeat for the parameter $b$
+$$
+\begin{array}{rl}
+SS_e  \mbox{ w.r.t. } b &= 4b^2 - 26.4b + 16ab\\ 
+{}&{}\\
+\frac{\partial SSe}{\partial b} &= 8b - 26.4 + 16 a \\
+\frac{\partial SSe}{\partial b} &= 16 a + 8 b - 26.4 \\
+0 &= 16 a + 8 b - 26.4 
+\end{array}
+$$
+How the function changes with respect to $a$.
+\begin{equation}
+\label{change_a}
+   0 = 52a + 16b - 55.8 
+\end{equation}
+How the function changes with respect to $b$.
+\begin{equation}
+\label{change_b}
+0 = 16a + 8b - 26.4
+\end{equation}
+Solve for $a$ in Equation \ref{change_a}
+\begin{equation}
+\label{solved_a}
+\frac{(55.8 - 16b)}{52} = a 
+\end{equation}
+Plug $a$ into Equation \ref{change_b} and solve for $b$ 
+$$
+\begin{array}{rl}
+0 &= 16 \cdot \left(\frac{(55.8 - 16b)}{52}\right) + 8b - 26.4 \\
+0 &= 16 \cdot \frac{55.8}{52} - 16 \cdot \frac{16b}{52} + 8b - 26.4
+\end{array}
+$$
+move all of the $b$ terms to one side of the equation
+$$
+\begin{array}{rl}
+26.4 - 16 \cdot \frac{55.8}{52} &= -16 \cdot \frac{16b}{52} + \frac{416b}{52} \\
+9.23077 &= \frac{160b}{52} \\
+9.23077 \cdot 52 &= 160b \\
+480 &= 160b \\
+\frac{480}{160} &= b
+\end{array}
+$$
+the intercept estimate
+$$
+\begin{array}{rl}
+3 &= b 
+\end{array}
+$$
+Plug our estimate of $b$ into Equation \ref{solved_a} and solve for $a$.
+$$
+\begin{array}{rl}
+\frac{(55.8 - 16 \cdot 3)}{52} &= a\\
+\frac{(55.8 - 48)}{52} &= a\\
+\frac{7.8}{52} &= a\\
+   0.15 &= a
+\end{array}
+$$
+So the best fitting line is 
+$$y = 0.15x + 3$$
+Or as commonly expressed in regression
+$$ \hat{y} = 3 + .015 x $$ 
+
+Why do we care? Well, another way to think about regression coefficients are as the partial derivatives with respect to each input. So in the equation,
+$$ GPA_{HS} \sim \beta_0 + \beta_1 ED_{mom} + \epsilon $$
+The $\beta_1$ coefficient is equal to
+ $$\frac{\partial GPA_{HS}}{\partial ED_{mom}} = \beta_1,$$ 
+which, from our model was estimated to be $0.15$. So for an increase of one unit in a mother's level of education there would be a corresponding increase of $0.15$ in $GPA_{HS}$. This type of regression is sometimes referred to as \textit{Level-Level} regression, because, a change in the level of the input $x$ results in a change in the level of the output $y$, while holding everything else (that is the other inputs) constant. We will see other types of regression below, but first a bit of a review.
+
+\section{Quick and dirty Power rules}
+
+Raising a number, say $a$ to a power, $b$, then raising that quantity to the power $c$ is the same as multiplying the powers together, thus $(a^b)^c = a^{bc}$. For example,
+
+$$
+(2^2)^3 = 2^{2 \times 3} = 2^6 = (2 \times 2) \times (2 \times 2) \times (2 \times 2) = 64.
+$$
+
+Also of note, is that the product of the same value, or base, let's say $2$, raised to different powers is equal to the base raised to the sum of the powers. For example,
+
+$$
+2^2 \times 2^3 = 2^{2+3} = 2^5 = (2 \times 2) \times (2 \times 2 \times 2)  = 32.
+$$
+
+\section{Quick and dirty Log rules}
+
+Remember that logs are meant to show the number of times a number, the \textit{base}, is to be multiplied by itself to get a particular value. Put another way, what power of the \textit{base} is needed to get the answer.   
+Let's take an easy example. We will use $100$, which can be expressed the following \textbf{equivalent} ways.
+
+$$\begin{array}{rl}
+100 &= 10^2\\
+{}&=10 \times 10\\
+{}&=1000/10
+\end{array}$$
+
+Now, if we work with \textit{log} with a base of $10$ we are interested in what power to raise $10$ to in order to produce the result of $100$
+
+$$
+\begin{array}{rl}
+\text{if }&10^2 = 100\\
+\text{then }&log_{10}(100) = 2
+\end{array}
+$$
+
+As we can see, $2$ is the answer for base $10$. We will just assume base $10$ for the following rules:
+
+\begin{description}
+\item[power rule] \hfill \\ 
+  $log(A^n) = n \times log(A)$
+  \begin{itemize}
+    \item $log(10^2) = 2 \times log(10) = 2 \times 1 = 2$
+  \end{itemize}
+\item[product rule] \hfill \\ 
+  $log(A \times B) = log(A) + log(B)$
+  \begin{itemize}
+    \item $log(10 \times 10) = log(10) + log(10) = 1 + 1 = 2$
+  \end{itemize}
+\item[quotient rule] \hfill \\ 
+  $log(\frac{A}{B}) = log(A) - log(B)$
+  \begin{itemize}
+    \item $log(\frac{1000}{10}) = log(1000) - log(10) = 3 - 1 = 2$
+  \end{itemize}
+\end{description}
+
+\section{Nonlinear models}
+
+From here out, we will be looking at nonlinear trends and some of the ways that we approach modeling them. It is important to keep in mind that one of the major assumptions of regression is that the variables are linearly related. For the most part we will be trying to transform relations of the form,
+\begin{equation}
+y = x^\beta + \epsilon
+\end{equation}
+into something that look more like the lines that we know, specifically $y = ax + b$. Figure \ref{fig:nonlinfig} illustrates three possible trajectories for different powers.
+
+<<nonlinfig, echo=FALSE, fig.cap='Nonlinear trajectories for different powers', fig.align='center', fig.pos='ht', fig.lp='fig:'>>=
+nonlin = function(x,b){
+  y = x^b
+  return(y)
+}
+
+r = seq(1,10,by=.5)
+op=par(mfrow=c(1,3),pty='s', mar=c(0,2,2,0))
+plot(r, nonlin(r,b=-.75), type='l', xlab='',ylab='',main=expression(paste("-1 < ",beta," < 0",sep='')))
+plot(r,nonlin(r,b=.25),type='l', xlab='',ylab='',main=expression(paste("0 <", beta," < 1",sep='')))
+plot(r,nonlin(r,b=2.5),type='l', xlab='',ylab='',main=expression(paste("1 < ",beta,sep='')))
+par(op)
+
+@
+
+\subsection{Log-Level regression example}
+
+For this model the outcome will be transformed in order to make the model linear. In particular the hypothesized model takes the the form 
+\begin{equation}
+\label{logleveleq}
+y \sim \alpha e^{\beta x}.
+\end{equation}
+Based on our knowledge of logs, in particular the \textbf{power rule} from above, we can take the log of both sides of Equation \ref{logleveleq} to get \footnote{Here we take the natural log, or log base $e$.},
+\begin{equation}
+\label{logleveleq2}
+\ln(y) \sim \ln (\alpha) +  \beta x.
+\end{equation}
+
+Table \ref{exdat1} contains example data that will be used to present this model \footnote{These example data, and others from http://www.real-statistics.com/regression/}.
+<<echo=FALSE, results="asis">>=
+exdat1 = data.frame('x' = c(45,99,31,57,37,85,21,64,17,41,103),
+                    'y' = c(33,72,19,27,23,62,24,32,18,36,76))
+print(xtable::xtable(exdat1, caption='Log-level example data',label='exdat1'),caption.placement='top')
+@
+<<echo=FALSE, results="asis">>=
+lm0 = lm(log(y) ~ x,exdat1)
+cf = round(coef(lm0),2)
+
+print(xtable::xtable(coef(summary(lm0)), caption='Log-level regression results'), caption.placement='top')
+@
+
+Now the question is how to interpret the resulting estimates. At first glace we are dealing with log changes in the outcome $y$ for corresponding unit changes in $x$. This is where the term \textit{Log-Level} comes from, and put simply, we can expect a $\Sexpr{cf[2]}\%$ change in $y$ for a 1 unit change in $x$. 
+
+A better understanding, at least in terms of raw scale units can be gained from \textit{back transformation}. In particular, we must exponentiate our estimates if we want to get back to raw score levels. Thus, our equation estimates
+\begin{equation}
+\ln (y) \sim \Sexpr{cf[1]} + \Sexpr{cf[2]}x,
+\end{equation}
+would need to be transformed back as
+\begin{equation}
+\begin{array}{rcl}
+y & \sim &e^{\Sexpr{cf[1]} + \Sexpr{cf[2]}x}\\
+&&e^{\Sexpr{cf[1]}} \times e^{ \Sexpr{cf[2]}x}
+\end{array}
+\end{equation}
+\begin{equation}
+y \sim \Sexpr{round(exp(cf[1]),4)} \times \Sexpr{round(exp(cf[2]),4)}^x
+\end{equation}
+
+Now, the intercept term is the expected level of $\ln(y)$ when $x=0$. In our equation above, the value is \Sexpr{round(exp(cf[1]),4)}, however the mean of our outcome is actually $\Sexpr{round(mean(exdat1$y),4)}$. Let's see what happens when we mean center our predictor. 
+<<echo=FALSE, results="asis">>=
+exdat1$x_c = exdat1$x - mean(exdat1$x)
+lm1 = lm(log(y) ~ x_c,exdat1)
+print(xtable::xtable(coef(summary(lm1)), caption='Log-level with mean centered predictor'), caption.placement='top')
+@
+
+Based on this model the expected mean of the outcome is \Sexpr{round(exp(coef(lm1)[1]),4)}. This is closer to our reported mean of \Sexpr{round(mean(exdat1$y),4)} but not exact... why? This is because here we are dealing with what is called the \textit{Geometric} mean, rather than the mean we normally use. The \textit{Geometric} mean is computed as,
+\begin{equation}
+\left(\prod_{i=1}^N x_i \right)^{1/N}.
+\end{equation}
+When we compute the geometric mean of $y$ we get \Sexpr{round((cumprod(exdat1$y)[11]^(1/11)),4)}, which matches our estimate based on the model. Figure \ref{fig:levellog} compares the untransformed trajectory and the transformed trajectory.
+
+<<levellog, echo=FALSE, fig.cap='Log-level Observed vs predicted', fig.lp='fig:',fig.pos='ht'>>=
+op=par(mfrow=c(1,2),pty='s')
+with(exdat1,plot(x,y, xlab='x', ylab='y',main='Untransformed'))
+with(exdat1,lines(sort(x),exp(cbind(1,sort(x))%*%coef(lm0)),type='o',pch='+'))
+with(exdat1,plot(x,log(y),xlab='x',ylab='ln(y)',main='Log-Log transformed'))
+with(exdat1,lines(sort(x),cbind(1,sort(x))%*%coef(lm0),type='o',pch='+'))
+par(op)
+@
+
+\subsection{Log-Log regression example}
+
+In this model, both the outcome and the predictor are log-transformed. That is because the predictor is raised to the power of a parameter, specifically
+\begin{equation}
+\label{loglogeq}
+y = \alpha x^\beta
+\end{equation}
+Thus, taking the log of both sides results in,
+\begin{equation}
+\label{loglogeq2}
+\ln(y) = \ln(\alpha) + \beta \ln(x)
+\end{equation}
+
+
+<<echo=FALSE, results="asis">>=
+exdat2 = data.frame(
+  x = c(8.1,69.9,4.2,14.1,5.6,52.1,44.6,19.6,33,6.7,30.1),
+  y = c(33,49,19,27,23,51,34,32,28,36,43)
+)
+print(xtable::xtable(exdat2, caption='Log-Log example data',label='exdat2'),caption.placement='top')
+@
+<<echo=FALSE, results="asis">>=
+lm2 = lm(log(y) ~ log(x),exdat2)
+cf = round(coef(lm2),2)
+
+print(xtable::xtable(coef(summary(lm2)), caption='Log-Log regression results', label='loglogtab'), caption.placement='top')
+@
+
+\subsection{Parameter interpretation}
+
+Interpretation of the model estimates in Table \ref{loglogtab} is pretty straight-forward. We are dealing with percent changes in both the outcome and the predictor. In economics this is referred to as \emph{elasticity}. So, based on the model a $1\%$ change in $x$ would result in an $\Sexpr{round(cf[2],2)} \%$ change in $y$. Figure \ref{fig:loglog} compares the untransformed trajectory and the transformed trajectory.
+
+<<loglog,fig.lp='fig:',echo=FALSE, fig.cap='Log-Log Observed vs predicted',fig.pos='ht'>>=
+op=par(mfrow=c(1,2),pty='s')
+with(exdat2,plot(x,y, xlab='x', ylab='y',main='Untransformed'))
+with(exdat2,lines(sort(x),exp(cbind(1,log(sort(x)))%*%coef(lm2)),type='o',pch='+'))
+with(exdat2,plot(log(x),log(y),xlab='ln(x)',ylab='ln(y)',main='Log transformed'))
+with(exdat2,lines(log(sort(x)),cbind(1,log(sort(x)))%*%coef(lm2),type='o',pch='+'))
+par(op)
+@
+
+\subsection{A caution about nonlinear transformations}
+
+Above, we've discussed power-\emph{ish} transformations, notice that in Figure \ref{fig:nonlinfig} the basic equation was $y = x^\beta$. The transformations just illustrated only really make sense if the ratio of largest to smallest value on the raw scale is large. If it's not, then something like the natural log will have little effect on the relation. 
+
+Also, if the values are negative, it will be necessary to add a constant before taking the log of the values. 
+
+Lastly, these transformations should only be used when the relationship is \emph{monotonic}, meaning it passes the horizontal line test, or is a \emph{one-to-one} function. This means that quadratic trends or trends that oscillate are not good candidates for transformation. When relations are \emph{monotonic} these transformations will not change the \emph{rank-order} of the observations, just the spaces in between successive values. 
+
+\subsection{Proportions and the Binomial models}
+
+There is a special case involved around \textbf{binary} outcomes. In general power transformations don't work well when the data values are near $0$ or $1$, which is exactly the case for binary data. Think about coding \emph{pass-fail} or \emph{True-False} outcomes. In this case we need to develop a way in which to transform these $0$/$1$ values into something manageable.
+
+\subsubsection{The Logistic curve}
+
+We will be using a function called the \emph{logistic curve} which has the functional specification of,
+\begin{equation}
+y = \frac{e^\theta}{1+e^\theta}
+\end{equation}
+Where $\theta$ represents all of the possible inputs of interest for predicting $y$. From our \emph{level-level} regression example, $theta$ may be equal to $ \beta_0 + \beta_1 x_1 + \ldots + \beta_k x_k$ thus making the equation
+\begin{equation}
+y = \frac{e^{(\beta_0 + \beta_1 x_1 + \ldots + \beta_k x_k)}}{1+e^{(\beta_0 + \beta_1 x_1 + \ldots + \beta_k x_k)}}
+\end{equation}
+
+With this approach we are modeling proportions. So, instead of trying to use either $0$ or $1$ as an outcome directly, we will be looking at the total number of $1$s out of all responses. A little later we will specify this as $Pr(Y=1)$ or the probability of scoring a $1$ on the outcome. For binary data this follows our logistic curve.
+
+However, we can still model proportions directly as well, as shown below.
+
+\subsection{Dose-Response example}
+
+ These data are a reproduction of data from:
+ 
+ C.I. Bliss (1935). The calculation of the dosage-mortality curve. \textit{Annals of Applied Biology, 22}(1), 134-167. \footnote{ Many thanks to Thaddeus Tarpey at Wright University. Check out his cite for this and more http://www.wright.edu/~thaddeus.tarpey/ }
+   
+\textbf{The Data}
+Beetles were exposed to carbon disulphide at varying concentrations for 5 hours.   
+\begin{itemize}   
+\item dose = mf/L concentration of CS2
+\item nexp = number of beetles exposed
+\item ndied = number of beetles killed
+\item prop = proportion of dead to exposed beetles 
+\end{itemize}   
+
+<<echo=FALSE, results='asis'>>=
+exp.dat = matrix(c(49.1,53,56.9,60.8,64.8,68.7,72.6,76.5,
+                   59,60,62,56,63,59,62,60,
+                   6,13,18,28,52,53,61,60,
+                   .102,.217,.29,.5,.825,.898,.984,1),ncol=4)
+colnames(exp.dat) = c('dose','nexp','ndied','prop')
+exp.dat = as.data.frame(exp.dat)
+# compute how many lived
+exp.dat$nalive = exp.dat$nexp - exp.dat$ndied
+print(xtable::xtable(exp.dat, caption='Beetle data'), caption.placement='top')
+@
+
+\subsection{The Logistic Model}
+Run a logistic regression of the proportion of dead to living beetles as a function of the dose of CS2 gas.
+Our model specification is,
+\begin{equation}
+\frac{n_{died}}{n_{alive}} \sim b_0 + b_1 dose
+\end{equation}
+
+<<echo=FALSE, results='asis'>>=
+print(xtable::xtable(
+  summary(glm(cbind(ndied,nalive) ~ dose, 
+            family=binomial,
+            data=exp.dat)->exp.glm), 
+  caption='Logistic model results'),, caption.placement='top')
+@
+  
+we may be interested in finding the concentration of CS2 gas  that is lethal 50\% of the time, the \textbf{LD50}.
+   
+<<echo=FALSE>>=
+dose4prob = function(b0,b1,prob){
+  d = (-b0+log(-prob/(prob-1)))/b1
+  return(d)
+} 
+#dose4prob(coef(exp.glm)[[1]],coef(exp.glm)[[2]],.5)
+@
+
+Note that if we have a function with multiple predictors we can solve for each variable using something similar.
+For example if,
+ $$y \sim b_0 + b_1(x_1) + b_2(x_2) + b_3(x_3)$$   
+ is the model. Then to find a specific value for one of the predictors ($x1, x2, x3$) that corresponds to a desired probability $y$.
+\begin{itemize} 
+\item $x_1 = (-b_0-b_2-b_3+log \left(\frac{-y}{(y-1)}\right))/b1$
+\item $x_2 = (-b_0-b_1-b_3+log \left(\frac{-y}{(y-1)}\right))/b2$
+\item $x_3 = (-b_0-b_1-b_2+log \left(\frac{-y}{(y-1)}\right))/b3$
+\end{itemize}  
+
+<<doseresp, fig.cap='Example Dose-Response curve',fig.lp='fig:', fig.pos='ht', echo=FALSE>>=
+# what is the range of doses
+#range(exp.dat$dose)
+# let's create our own range to predict with
+drange = seq(30,90,length=100)
+# predict probability of beetle death based on the model
+exp.pred = predict(exp.glm, newdata=data.frame(dose=drange))
+# Now we plot
+# first the predicted values
+plot(drange, 
+     exp(exp.pred)/(1+exp(exp.pred)),
+     type='l',
+     xlab='dose',
+     ylab='probability')
+# add in the observed points
+points(prop ~ dose, data = exp.dat, col='red', pch=19)
+# compute our LD values
+ld50 = dose4prob(coef(exp.glm)[[1]],coef(exp.glm)[[2]],.50)
+ld25 = dose4prob(coef(exp.glm)[[1]],coef(exp.glm)[[2]],.25)
+# let's add these to our graph for visualization purposes
+abline(h=.5,lty='dashed',col='red')
+abline(h=.25,lty='dotted',col='blue')
+legend('topleft',
+       c(expression(LD[50]),
+         expression(LD[25])),
+       col=c('red','blue'),lty=c('dashed','dotted'),
+       inset=.01)
+text(ld50,.52,sprintf("%.3f",ld50),pos=c(2),col='red')
+text(ld25,.27,sprintf("%.3f",ld25),pos=c(2),col='blue')
+@
+
+
+\clearpage
+
+\begin{landscape}
+Below is a table to help you understand the different types of transformations available and how to interpret them.
+\begin{equation}
+\begin{array}{lcclll}
+\mbox{Name} 		& \mbox{Outcome}	& \mbox{Input}	&\mbox{Form} 									&\beta_1		& \mbox{interpretation}\\
+
+\mbox{Level-Level} 	& Y 				& X 			& ~~~~~y \sim \beta_0 + \beta_1 x + \epsilon	&~~~\Delta y =\beta_1 \Delta x		& 1 \mbox{ unit change in }x\mbox{ give }\beta_1\mbox{ unit change in }y\\
+\mbox{Level-Log} 	& Y 				& ln(X) 		& ~~~~~y \sim \beta_0 + \beta_1 ln(x) + \epsilon&~~~\Delta y = \beta_1 \% \Delta x	 	& 1 \% \mbox{ change in }x\mbox{ give }\beta_1\mbox{ unit change in }y\\
+\mbox{Log-Level} 	& ln(Y) 			& X 			& ln(y) \sim \beta_0 + \beta_1 x + \epsilon 	&\% \Delta y = \beta_1 \Delta x		& 1\mbox{ unit change in }x\mbox{ gives }\beta_1 \% \mbox{ change in }y\\
+\mbox{Log-Log} 		& ln(Y) 			& ln(X) 		& ln(y) \sim \beta_0 + \beta_1 ln(x) + \epsilon	&\% \Delta y=\beta_1  \% \Delta x	& 1\% \mbox{ change in }x\mbox{ give }\beta_1 \% \mbox{ change in }y
+
+\end{array}
+\end{equation}
+\end{landscape}
+% example
+% http://www.ats.ucla.edu/stat/mult_pkg/faq/general/log_transformed_regression.htm
+
+\end{document}
+
